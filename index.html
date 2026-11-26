@@ -91,9 +91,47 @@ h1{font-size:21px;font-weight:800;color:var(--navy);letter-spacing:-.01em}
 @media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}}
 @media(max-width:640px){.wrap{padding:16px 14px 32px}.kpis{grid-template-columns:1fr 1fr}header{padding:11px 14px}#map{height:300px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ===== login simulado ===== */
+.login{position:fixed;inset:0;z-index:5000;background:linear-gradient(160deg,#072146 0%,#004481 55%,#1973b8 100%);display:grid;place-items:center;padding:20px}
+.login.off{display:none}
+.login-box{background:#fff;border-radius:14px;width:100%;max-width:380px;padding:30px 28px 24px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.login-logo svg{height:22px;width:auto}
+.login-logo span{font-size:13px;font-weight:600;color:#5a6478;border-left:1px solid #cdd6e4;padding-left:12px}
+.login h1{font-size:20px;font-weight:800;color:#072146;margin-bottom:4px}
+.login p{font-size:12.5px;color:#5a6478;margin-bottom:18px;line-height:1.5}
+.login label{display:block;font-size:12px;font-weight:600;color:#5a6478;margin-bottom:5px}
+.login input{width:100%;border:1px solid #cdd6e4;border-radius:9px;padding:11px 12px;font-size:14px;font-family:inherit;margin-bottom:13px;outline:none}
+.login input:focus{border-color:#1973b8;box-shadow:0 0 0 3px rgba(25,115,184,.15)}
+.login button{width:100%;background:#004481;color:#fff;border:none;border-radius:9px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.login button:hover{background:#072146}
+.login button:focus-visible{outline:2px solid #49a5e6;outline-offset:2px}
+.login-err{font-size:12px;color:#c0392b;min-height:16px;margin:-6px 0 8px}
+.login-demo{font-size:11.5px;color:#8a5a00;background:#fdf3dc;border-radius:8px;padding:9px 11px;margin-top:14px;line-height:1.45}
+.user-chip{display:flex;align-items:center;gap:8px;font-size:12px;color:#1a2438}
+.user-av{width:28px;height:28px;border-radius:50%;background:#004481;color:#fff;font-weight:700;font-size:11.5px;display:grid;place-items:center}
+.user-chip small{display:block;color:#8a93a6;font-size:11px}
+.user-out{background:none;border:none;color:#1973b8;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;padding:4px}
+.user-out:hover{text-decoration:underline}
 </style>
 </head>
 <body>
+<!-- LOGIN SIMULADO: no valida credenciales ni envía nada; solo guarda el nombre en la sesión del navegador -->
+<div class="login" id="login">
+  <form class="login-box" onsubmit="return doLogin(event)">
+    <div class="login-logo"><svg  viewBox="0 0 600 179.8" height="22" xmlns="http://www.w3.org/2000/svg"><g fill="#004481"><path d="M432.2,24.4l-51.6,98.2c-1.1,2.1-4.3,2.1-5.4,0l-51.6-98.2c-0.5-1-1.5-1.6-2.6-1.6h-25c-1.7,0-2.8,1.8-2,3.3l81.3,152.2c1.1,2.1,4.1,2.1,5.3,0l81.3-152.2c0.8-1.5-0.3-3.3-2-3.3h-25C433.7,22.8,432.7,23.4,432.2,24.4L432.2,24.4z"/><path d="M461.5,155.5l51.6-98.2c1.1-2.1,4.3-2.1,5.4,0l51.6,98.2c0.5,1,1.5,1.6,2.6,1.6h25c1.7,0,2.8-1.8,2-3.3L518.4,1.6c-1.1-2.1-4.1-2.1-5.3,0l-81.3,152.2c-0.8,1.5,0.3,3.3,2,3.3h25C459.9,157,461,156.4,461.5,155.5L461.5,155.5z"/><path d="M108.8,95.2c10.8-5.4,17.5-17.1,17.5-31.4c0-24.5-19.1-41.1-46-41.1H3c-1.7,0-3,1.3-3,3v151.1c0,1.7,1.3,3,3,3h74c37,0,56.5-15.9,56.5-47.1C133.5,102.3,108.8,95.2,108.8,95.2L108.8,95.2z M29,45.5h45.9c16.9,0,25.5,7.2,25.5,20.6c0,13.4-8.6,20.6-25.5,20.6H29c-1.6,0-3-1.3-3-3V48.5C26,46.8,27.3,45.5,29,45.5L29,45.5z M75.5,157l-46.5,0c-1.7,0-3-1.3-3-3l0-41.7c0-1.6,1.3-3,3-3h46.5c22.2,0,32.1,6.3,32.1,23.8C107.5,150.8,97.9,157,75.5,157L75.5,157z"/><path d="M267.5,95.2c10.8-5.4,17.5-17.1,17.5-31.4c0-24.5-19.1-41.1-46-41.1h-77.4c-1.7,0-3,1.3-3,3v151.1c0,1.7,1.3,3,3,3h74c37,0,56.5-15.9,56.5-47.1C292.2,102.3,267.5,95.2,267.5,95.2L267.5,95.2z M187.7,45.5h45.9c16.9,0,25.5,7.2,25.5,20.6c0,13.4-8.6,20.6-25.5,20.6h-45.9c-1.7,0-3-1.3-3-3V48.5C184.7,46.8,186,45.5,187.7,45.5L187.7,45.5z M234.1,157l-46.5,0c-1.6,0-3-1.3-3-3v-41.7c0-1.6,1.3-3,3-3h46.5c22.2,0,32.1,6.3,32.1,23.8C266.2,150.8,256.5,157,234.1,157L234.1,157z"/></g></svg><span>AgroAdvisor MX</span></div>
+    <h1>Acceso corporativo</h1>
+    <p>Ingresa con tu usuario de red BBVA.</p>
+    <label for="lgUser">Usuario</label>
+    <input id="lgUser" type="text" value="MX10482" autocomplete="off">
+    <label for="lgPass">Contraseña</label>
+    <input id="lgPass" type="password" value="demo-agro" autocomplete="off">
+    <div class="login-err" id="lgErr"></div>
+    <button type="submit">Ingresar</button>
+    <div class="login-demo">Demo: acceso simulado. No se validan ni se envían credenciales.</div>
+  </form>
+</div>
 <header>
   <svg class="bbva-logo" viewBox="0 0 600 179.8" height="22" xmlns="http://www.w3.org/2000/svg"><g fill="#004481"><path d="M432.2,24.4l-51.6,98.2c-1.1,2.1-4.3,2.1-5.4,0l-51.6-98.2c-0.5-1-1.5-1.6-2.6-1.6h-25c-1.7,0-2.8,1.8-2,3.3l81.3,152.2c1.1,2.1,4.1,2.1,5.3,0l81.3-152.2c0.8-1.5-0.3-3.3-2-3.3h-25C433.7,22.8,432.7,23.4,432.2,24.4L432.2,24.4z"/><path d="M461.5,155.5l51.6-98.2c1.1-2.1,4.3-2.1,5.4,0l51.6,98.2c0.5,1,1.5,1.6,2.6,1.6h25c1.7,0,2.8-1.8,2-3.3L518.4,1.6c-1.1-2.1-4.1-2.1-5.3,0l-81.3,152.2c-0.8,1.5,0.3,3.3,2,3.3h25C459.9,157,461,156.4,461.5,155.5L461.5,155.5z"/><path d="M108.8,95.2c10.8-5.4,17.5-17.1,17.5-31.4c0-24.5-19.1-41.1-46-41.1H3c-1.7,0-3,1.3-3,3v151.1c0,1.7,1.3,3,3,3h74c37,0,56.5-15.9,56.5-47.1C133.5,102.3,108.8,95.2,108.8,95.2L108.8,95.2z M29,45.5h45.9c16.9,0,25.5,7.2,25.5,20.6c0,13.4-8.6,20.6-25.5,20.6H29c-1.6,0-3-1.3-3-3V48.5C26,46.8,27.3,45.5,29,45.5L29,45.5z M75.5,157l-46.5,0c-1.7,0-3-1.3-3-3l0-41.7c0-1.6,1.3-3,3-3h46.5c22.2,0,32.1,6.3,32.1,23.8C107.5,150.8,97.9,157,75.5,157L75.5,157z"/><path d="M267.5,95.2c10.8-5.4,17.5-17.1,17.5-31.4c0-24.5-19.1-41.1-46-41.1h-77.4c-1.7,0-3,1.3-3,3v151.1c0,1.7,1.3,3,3,3h74c37,0,56.5-15.9,56.5-47.1C292.2,102.3,267.5,95.2,267.5,95.2L267.5,95.2z M187.7,45.5h45.9c16.9,0,25.5,7.2,25.5,20.6c0,13.4-8.6,20.6-25.5,20.6h-45.9c-1.7,0-3-1.3-3-3V48.5C184.7,46.8,186,45.5,187.7,45.5L187.7,45.5z M234.1,157l-46.5,0c-1.6,0-3-1.3-3-3v-41.7c0-1.6,1.3-3,3-3h46.5c22.2,0,32.1,6.3,32.1,23.8C266.2,150.8,256.5,157,234.1,157L234.1,157z"/></g></svg>
   <span class="sep"></span>
@@ -281,8 +319,8 @@ render();
 
 // ===== mapa =====
 if(window.L){
-  const map=L.map('map',{scrollWheelZoom:false}).setView([23.2,-104.5],5);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:'© OpenStreetMap · © CARTO'}).addTo(map);
+  const map=L.map('map',{scrollWheelZoom:false});window.__MAPA=map;map.setView([23.2,-104.5],5);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri'}).addTo(map);
   const COL={ok:'#48a23f',mod:'#d4a017',crit:'#c0392b',nv:'#9aa3b5'};
   CARTERA.forEach(c=>{
     const e=estado(c);
@@ -293,6 +331,28 @@ if(window.L){
 }else{
   document.getElementById('map').innerHTML='<div style="display:grid;place-items:center;height:100%;color:var(--txt-3);font-size:13px">El mapa necesita conexión a internet.</div>';
 }
+
+// ===== login simulado (sesión del navegador, compartida entre las dos páginas) =====
+const DEMO_USER={id:'MX10482',nombre:'Mariana Ortega',area:'Seguimiento Central · BBVA México',ini:'MO'};
+function ss(k,v){try{if(v===undefined)return sessionStorage.getItem(k);if(v===null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v);}catch(e){return null;}}
+function pintarUsuario(){
+  const u=DEMO_USER, box=document.querySelector('.hdr-right');
+  if(!box||document.getElementById('userChip'))return;
+  const d=document.createElement('div');d.className='user-chip';d.id='userChip';
+  d.innerHTML=`<span class="user-av">${u.ini}</span><span>${u.nombre}<small>${u.area}</small></span><button class="user-out" onclick="doLogout()">Salir</button>`;
+  box.appendChild(d);
+}
+function doLogin(ev){
+  ev.preventDefault();
+  const us=document.getElementById('lgUser').value.trim(), pw=document.getElementById('lgPass').value;
+  if(!us||!pw){document.getElementById('lgErr').textContent='Completa usuario y contraseña.';return false;}
+  ss('aamx_user',us);document.getElementById('login').classList.add('off');pintarUsuario();
+  try{if(typeof map!=='undefined'&&map&&map.invalidateSize)setTimeout(()=>map.invalidateSize(),50);}catch(e){}
+  if(window.__MAPA&&__MAPA.invalidateSize)setTimeout(()=>__MAPA.invalidateSize(),50);
+  return false;
+}
+function doLogout(){ss('aamx_user',null);location.href='index.html';}
+if(ss('aamx_user')){document.getElementById('login').classList.add('off');pintarUsuario();}
 </script>
 </body>
 </html>
