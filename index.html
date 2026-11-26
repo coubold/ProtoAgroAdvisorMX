@@ -204,22 +204,27 @@ const R=rng(20261126);
 const pick=a=>a[Math.floor(R()*a.length)];
 const between=(a,b)=>a+R()*(b-a);
 
+// cultivos por región: [cultivo, paquete] según lo que se siembra en cada zona
 const REGIONES=[
-  {n:'Bajío, Gto.',   lat:[20.30,20.85],lng:[-101.80,-100.85],cult:['Maíz','Trigo']},
-  {n:'Ciénega, Jal.', lat:[20.20,20.55],lng:[-102.95,-102.45],cult:['Maíz']},
-  {n:'Centro, Sin.',  lat:[24.75,25.55],lng:[-108.10,-107.35],cult:['Maíz']},
-  {n:'Valle del Yaqui, Son.',lat:[27.20,27.55],lng:[-110.15,-109.70],cult:['Trigo']},
-  {n:'Bajío, Mich.',  lat:[19.95,20.30],lng:[-102.40,-101.70],cult:['Maíz','Trigo']}
+  {n:'Bajío, Gto.',          lat:[20.30,20.85],lng:[-101.80,-100.85],cult:[['Maíz','maiz-riego'],['Maíz','maiz-riego-cons'],['Trigo','trigo-riego'],['Sorgo','sorgo-riego'],['Cebada','cebada-riego']]},
+  {n:'Ciénega, Jal.',        lat:[20.20,20.55],lng:[-102.95,-102.45],cult:[['Maíz','maiz-temporal'],['Maíz','maiz-riego'],['Sorgo','sorgo-riego']]},
+  {n:'Centro, Sin.',         lat:[24.75,25.55],lng:[-108.10,-107.35],cult:[['Maíz','maiz-riego-oi'],['Maíz','maiz-riego-oi'],['Frijol','frijol-riego-oi'],['Garbanzo','garbanzo-oi']]},
+  {n:'Valle del Yaqui, Son.',lat:[27.20,27.55],lng:[-110.15,-109.70],cult:[['Trigo','trigo-riego'],['Trigo','trigo-riego'],['Cártamo','cartamo-oi'],['Garbanzo','garbanzo-oi']]},
+  {n:'Bajío, Mich.',         lat:[19.95,20.30],lng:[-102.40,-101.70],cult:[['Maíz','maiz-riego'],['Trigo','trigo-riego'],['Sorgo','sorgo-riego']]},
+  {n:'Centro, Tamps.',       lat:[23.30,24.10],lng:[-98.90,-98.20], cult:[['Sorgo','sorgo-temporal'],['Sorgo','sorgo-temporal'],['Maíz','maiz-temporal']]}
 ];
 const PROTEGIDA=[
   {n:'Altos, Jal.',  lat:[20.70,20.95],lng:[-102.60,-102.20],cult:'Tomate · malla sombra'},
   {n:'Zamora, Mich.',lat:[19.95,20.05],lng:[-102.35,-102.20],cult:'Berries · macrotúnel'},
-  {n:'Bajío, Gto.',  lat:[20.45,20.70],lng:[-101.30,-101.00],cult:'Pepino · invernadero'}
+  {n:'Bajío, Gto.',  lat:[20.45,20.70],lng:[-101.30,-101.00],cult:'Pepino · invernadero'},
+  {n:'Centro, Sin.', lat:[24.75,25.10],lng:[-107.55,-107.30],cult:'Chile · invernadero'}
 ];
-// mismos ids y valores que el catálogo del informe de verificación (MXN/ha, ilustrativos)
+// mismos ids y costos que el catálogo del informe de verificación (MXN/ha, ilustrativos)
 const PACKS={
-  'Maíz':[{id:'maiz-riego',n:'riego',costo:21800},{id:'maiz-riego-cons',n:'riego · lab. conservación',costo:19200},{id:'maiz-temporal',n:'temporal',costo:10400}],
-  'Trigo':[{id:'trigo-riego',n:'riego',costo:17800},{id:'trigo-temporal',n:'temporal',costo:8100}]
+  'maiz-riego':{n:'riego · P-V',costo:21800},'maiz-riego-cons':{n:'riego · lab. conservación',costo:19200},'maiz-temporal':{n:'temporal',costo:10400},
+  'maiz-riego-oi':{n:'riego · O-I',costo:26500},'trigo-riego':{n:'riego',costo:17800},'sorgo-riego':{n:'riego',costo:15500},
+  'sorgo-temporal':{n:'temporal',costo:8200},'frijol-riego-oi':{n:'riego · O-I',costo:16000},'garbanzo-oi':{n:'riego · O-I',costo:13500},
+  'cartamo-oi':{n:'riego · O-I',costo:9000},'cebada-riego':{n:'maltera · riego',costo:14000}
 };
 const ESC={ // escenario que se le pasa al informe para que muestre lo mismo
   ok:{est:'ok',lbl:'En línea',gap:'—'},
@@ -241,7 +246,7 @@ for(let i=0;i<N;i++){
       monto:Math.round(ha*between(380000,620000)/10000)*10000,gar:pick([50,70,80]),esc:null,croquis:R()<.6});
     continue;
   }
-  const r=pick(REGIONES), cult=pick(r.cult), p=pick(PACKS[cult]);
+  const r=pick(REGIONES), cp=pick(r.cult), cult=cp[0], p=Object.assign({id:cp[1]},PACKS[cp[1]]);
   const ha=Math.round(between(20,180));
   const x=R(), esc=x<.8?'ok':(x<.89?'siembra':(x<.96?'sup':'cult'));
   CARTERA.push({id,rfc:rfc(),reg:r.n,lat:between(...r.lat),lng:between(...r.lng),cult,pack:p,ha,

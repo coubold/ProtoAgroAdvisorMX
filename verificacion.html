@@ -345,11 +345,19 @@ let CENTER=null, HA=0, ANG=0, SCALE=1;
 // Números ILUSTRATIVOS para la demo (MXN/ha, convertidos de la versión en USD). En producción provienen del Agrocosto
 // vigente de FIRA por región/cultivo/tecnología.
 const PACKS_FIRA=[
-  {id:'maiz-riego',     cult:'Maíz',  nombre:'Maíz · riego (gravedad) · Bajío',  costoHa:21800, rindeObj:11,  precio:3570, ciclo:'Primavera-Verano', siembra:'marzo–abril', lluviaEsp:[90,220], desc:'Semilla híbrida, fertilización completa, riego por gravedad, control integrado de plagas.'},
-  {id:'maiz-riego-cons',cult:'Maíz',  nombre:'Maíz · riego · labranza de conservación', costoHa:19200, rindeObj:10.5,precio:3570, ciclo:'Primavera-Verano', siembra:'marzo–abril', lluviaEsp:[90,220], desc:'Igual que riego pleno, con labranza de conservación: menor costo de preparación.'},
-  {id:'maiz-temporal',  cult:'Maíz',  nombre:'Maíz · temporal',                  costoHa:10400, rindeObj:5.5, precio:3570, ciclo:'Primavera-Verano', siembra:'mayo–junio', lluviaEsp:[400,650], desc:'Semilla mejorada, fertilización básica, sin riego. Depende de la ventana de lluvia.'},
-  {id:'trigo-riego',    cult:'Trigo', nombre:'Trigo · riego · Bajío',            costoHa:17800, rindeObj:6.5, precio:3980, ciclo:'Otoño-Invierno', siembra:'noviembre–diciembre', lluviaEsp:[40,120], desc:'Semilla certificada, fertilización completa, riego tecnificado.'},
-  {id:'trigo-temporal', cult:'Trigo', nombre:'Trigo · temporal',                 costoHa:8100,  rindeObj:3.5, precio:3980, ciclo:'Otoño-Invierno', siembra:'noviembre–diciembre', lluviaEsp:[120,280], desc:'Semilla mejorada, fertilización básica, sin riego.'}
+  // m0 = mes de inicio de siembra (0=ene). rot = cultivo con el que suele rotar en la zona.
+  {id:'maiz-riego',      cult:'Maíz',    nombre:'Maíz · riego (gravedad) · Bajío',            costoHa:21800, rindeObj:11,  precio:3570,  ciclo:'Primavera-Verano', siembra:'marzo–abril',       m0:2,  rot:'Trigo',   lluviaEsp:[90,220],  desc:'Semilla híbrida, fertilización completa, riego por gravedad, control integrado de plagas.'},
+  {id:'maiz-riego-cons', cult:'Maíz',    nombre:'Maíz · riego · labranza de conservación · Bajío', costoHa:19200, rindeObj:10.5,precio:3570,  ciclo:'Primavera-Verano', siembra:'marzo–abril',       m0:2,  rot:'Cebada',  lluviaEsp:[90,220],  desc:'Igual que riego pleno, con labranza de conservación: menor costo de preparación.'},
+  {id:'maiz-temporal',   cult:'Maíz',    nombre:'Maíz · temporal · Jalisco/Bajío',             costoHa:10400, rindeObj:5.5, precio:3570,  ciclo:'Primavera-Verano', siembra:'mayo–junio',        m0:4,  rot:'Sorgo',   lluviaEsp:[400,650], desc:'Semilla mejorada, fertilización básica, sin riego. Depende de la ventana de lluvia.'},
+  {id:'maiz-riego-oi',   cult:'Maíz',    nombre:'Maíz · riego · otoño-invierno · Sinaloa',     costoHa:26500, rindeObj:11.5,precio:3570,  ciclo:'Otoño-Invierno',   siembra:'octubre–diciembre', m0:9,  rot:'Frijol',  lluviaEsp:[20,120],  desc:'Semilla híbrida, fertilización completa, riego de distrito, ciclo otoño-invierno.'},
+  {id:'trigo-riego',     cult:'Trigo',   nombre:'Trigo · riego · Bajío/Valle del Yaqui',       costoHa:17800, rindeObj:6.5, precio:3980,  ciclo:'Otoño-Invierno',   siembra:'noviembre–diciembre',m0:10, rot:'Maíz',    lluviaEsp:[40,120],  desc:'Semilla certificada, fertilización completa, riego tecnificado.'},
+  {id:'trigo-temporal',  cult:'Trigo',   nombre:'Trigo · temporal',                            costoHa:8100,  rindeObj:3.5, precio:3980,  ciclo:'Otoño-Invierno',   siembra:'noviembre–diciembre',m0:10, rot:'Cebada',  lluviaEsp:[120,280], desc:'Semilla mejorada, fertilización básica, sin riego.'},
+  {id:'sorgo-riego',     cult:'Sorgo',   nombre:'Sorgo · riego · Bajío',                       costoHa:15500, rindeObj:8,   precio:3240,  ciclo:'Primavera-Verano', siembra:'mayo–junio',        m0:4,  rot:'Trigo',   lluviaEsp:[250,500], desc:'Semilla híbrida, fertilización completa, riego de auxilio.'},
+  {id:'sorgo-temporal',  cult:'Sorgo',   nombre:'Sorgo · temporal · Tamaulipas',               costoHa:8200,  rindeObj:3.8, precio:3240,  ciclo:'Primavera-Verano', siembra:'junio–julio',       m0:5,  rot:'Maíz',    lluviaEsp:[300,550], desc:'Semilla híbrida, fertilización básica, sin riego.'},
+  {id:'frijol-riego-oi', cult:'Frijol',  nombre:'Frijol · riego · otoño-invierno · Sinaloa',   costoHa:16000, rindeObj:1.9, precio:14400, ciclo:'Otoño-Invierno',   siembra:'octubre–noviembre', m0:9,  rot:'Maíz',    lluviaEsp:[20,120],  desc:'Semilla certificada, fertilización y riego de auxilio.'},
+  {id:'garbanzo-oi',     cult:'Garbanzo',nombre:'Garbanzo · riego · otoño-invierno · Sinaloa/Sonora', costoHa:13500, rindeObj:2.2, precio:17000, ciclo:'Otoño-Invierno', siembra:'noviembre–diciembre',m0:10, rot:'Maíz',    lluviaEsp:[20,100],  desc:'Garbanzo blanco de exportación, riego de auxilio.'},
+  {id:'cartamo-oi',      cult:'Cártamo', nombre:'Cártamo · riego · otoño-invierno · Sonora',   costoHa:9000,  rindeObj:2.2, precio:8000,  ciclo:'Otoño-Invierno',   siembra:'noviembre–diciembre',m0:10, rot:'Trigo',   lluviaEsp:[20,100],  desc:'Oleaginosa de bajo costo, riego de auxilio.'},
+  {id:'cebada-riego',    cult:'Cebada',  nombre:'Cebada maltera · riego · Bajío',              costoHa:14000, rindeObj:5.5, precio:4300,  ciclo:'Otoño-Invierno',   siembra:'noviembre–enero',   m0:10, rot:'Sorgo',   lluviaEsp:[40,120],  desc:'Semilla certificada bajo contrato con maltera, riego tecnificado.'}
 ];
 function initPacks(){
   const sel=document.getElementById('packFira');
@@ -474,9 +482,9 @@ function verificar(){
   }},600);
 }
 
-const PRECIOS={'Maíz':3570,'Trigo':3980,'Sorgo':3240,'Frijol':14400};
-const RINDES={'Maíz':11,'Trigo':6,'Sorgo':7,'Frijol':2.2};
-const CROP_COLOR={'Maíz':'var(--maiz)','Trigo':'var(--trigo)','Sorgo':'var(--girasol)','Frijol':'var(--soja)'};
+const PRECIOS={'Maíz':3570,'Trigo':3980,'Sorgo':3240,'Frijol':14400,'Garbanzo':17000,'Cártamo':8000,'Cebada':4300};
+const RINDES={'Maíz':11,'Trigo':6,'Sorgo':7,'Frijol':2.2,'Garbanzo':2.2,'Cártamo':2.2,'Cebada':5.5};
+const CROP_COLOR={'Maíz':'var(--maiz)','Trigo':'var(--trigo)','Sorgo':'#b5523b','Frijol':'var(--soja)','Garbanzo':'#c7a46b','Cártamo':'#e8852e','Cebada':'#8fa35a'};
 const fmt=n=>'MXN '+Math.round(n).toLocaleString('es-MX');
 
 function mostrarInforme(){
@@ -485,29 +493,25 @@ function mostrarInforme(){
   const credId=document.getElementById('credId').value||'MX-2026-00123';
   const rfc=(document.getElementById('rfc').value||'— no cargado').toUpperCase();
   const seed=Math.abs(Math.round((CENTER[0]+CENTER[1])*10000));
-  const cultivos=['Maíz','Trigo'];  // granos del Bajío en rotación (maíz P-V, trigo O-I)
+  const packR=getPack();
+  const cultivos=packR?[packR.cult,packR.rot]:['Maíz','Trigo'];  // cultivo del paquete y el que suele rotar con él en la zona
   let coincide=(seed%10)<7, parcial=!coincide&&(seed%10)<9;
   if(ESC==='ok'||ESC==='siembra'){coincide=true;parcial=false;}
   if(ESC==='sup'){coincide=false;parcial=true;}
   if(ESC==='cult'){coincide=false;parcial=false;}
   let sensado=coincide?declarado:(parcial?declarado:cultivos[seed%cultivos.length]);
-  if(ESC==='cult'&&sensado.toLowerCase()===declarado.toLowerCase())sensado=['Maíz','Trigo','Sorgo'].find(c=>c.toLowerCase()!==declarado.toLowerCase());
+  if(ESC==='cult'&&sensado.toLowerCase()===declarado.toLowerCase())sensado=cultivos.find(c=>c.toLowerCase()!==declarado.toLowerCase())||'Maíz';
   const mismoCultivo=sensado.toLowerCase()===declarado.toLowerCase();
   const haSensada=coincide?haReal:(parcial?Math.round(haReal*(0.5+(seed%30)/100)):Math.round(haReal*(seed%40)/100));
   const cobertura=Math.round(haSensada/haReal*100);
   const estadosCult=['Emergencia','Desarrollo vegetativo','Floración','Llenado de grano','Madurez'];
   let estadoCult=estadosCult[seed%estadosCult.length];
-  // si el cultivo detectado es el del paquete, la etapa sigue el calendario del ciclo (mes actual)
+  // la etapa sigue el calendario del ciclo según el mes actual. Si el cultivo detectado es el de rotación, se usa el ciclo opuesto.
   const packE=getPack();
-  if(packE&&['maíz','trigo'].includes(sensado.toLowerCase())){
-    const m=new Date().getMonth(); // 0=ene
-    const CAL={
-      'maiz-riego':     ['Madurez','Madurez','Emergencia','Emergencia','Desarrollo vegetativo','Desarrollo vegetativo','Floración','Llenado de grano','Madurez','Madurez','Madurez','Madurez'],
-      'maiz-temporal':  ['Madurez','Madurez','Madurez','Madurez','Emergencia','Emergencia','Desarrollo vegetativo','Desarrollo vegetativo','Floración','Llenado de grano','Madurez','Madurez'],
-      'trigo':          ['Desarrollo vegetativo','Desarrollo vegetativo','Floración','Llenado de grano','Madurez','Madurez','Madurez','Madurez','Madurez','Madurez','Emergencia','Emergencia']
-    };
-    const k=sensado==='Trigo'?'trigo':(packE.id==='maiz-temporal'?'maiz-temporal':'maiz-riego');
-    estadoCult=CAL[k][m];
+  if(packE){
+    const m0=sensado.toLowerCase()===packE.cult.toLowerCase()?packE.m0:(packE.m0+6)%12;
+    const d=(new Date().getMonth()-m0+12)%12;
+    estadoCult=['Emergencia','Desarrollo vegetativo','Desarrollo vegetativo','Floración','Llenado de grano'][d]||'Madurez';
   }
   const vigor=['Bajo','Medio','Alto'][coincide?2:(parcial?1:0)];
   const vigorColor=vigor==='Alto'?'var(--green)':(vigor==='Medio'?'var(--amber)':'var(--red)');
@@ -545,8 +549,16 @@ function mostrarInforme(){
   const rindeOk=pack?rinde>=rindeObjPack*0.85:false;       // rinde en línea si ≥85% del objetivo
   const rindeDesvio=pack?Math.round((rinde/rindeObjPack-1)*100):0;
   // fecha de siembra detectada: dentro de la ventana del pack si está en línea; si no, un mes corrido
-  const fueraMeses=['ene','feb','jul','ago','sep'];
-  const siembraDet=pack?(siembraEnVentana?pack.siembra+' 2026':fueraMeses[seed%fueraMeses.length]+' 2026'):'—';
+  // siembra fuera de ventana: atrasada 2 meses si ese mes ya pasó; si no (ciclo recién empezado), adelantada 1 mes
+  const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'], hoyM=new Date().getMonth(), hoyY=new Date().getFullYear();
+  let mesDet=null;
+  if(pack&&!siembraEnVentana){
+    const tarde=(pack.m0+2)%12;
+    mesDet=((hoyM-tarde+12)%12)<=6?tarde:(pack.m0+11)%12;
+    // la etapa del cultivo sigue la siembra detectada, no la del paquete
+    if(sensado.toLowerCase()===pack.cult.toLowerCase()){const d=(hoyM-mesDet+12)%12;estadoCult=['Emergencia','Desarrollo vegetativo','Desarrollo vegetativo','Floración','Llenado de grano'][d]||'Madurez';}
+  }
+  const siembraDet=pack?(siembraEnVentana?pack.siembra:`${MESES[mesDet]} ${mesDet<=hoyM?hoyY:hoyY-1} (${mesDet===(pack.m0+2)%12?'atrasada':'adelantada'})`):'—';
   // clima: lluvia real del trimestre vs. rango esperado del pack
   const climaOk=pack?(lluvia90>=pack.lluviaEsp[0]):false;
   // filas del contraste (solo lo que Bold puede ver)
