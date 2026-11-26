@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgroAdvisor MX · Verificación técnica</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{
+  --bbva:#004481;--bbva-blue:#1973b8;--bbva-light:#49a5e6;--navy:#072146;
+  --txt:#1a2438;--txt-2:#5a6478;--txt-3:#8a93a6;
+  --surface:#fff;--surface-2:#f4f7fa;--line:#e2e7ee;--line-2:#cdd6e4;
+  --soft:#eaf2fb;--amber:#d4a017;--green:#48a23f;--red:#c0392b;
+  --soja:#48a23f;--maiz:#d9a441;--trigo:#a8742a;--girasol:#f0c419;
+  --mono:'SF Mono',ui-monospace,Menlo,monospace;
+  --shadow:0 1px 3px rgba(7,33,70,.06),0 4px 16px rgba(7,33,70,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,system-ui,sans-serif;background:var(--surface-2);color:var(--txt);font-size:14px}
+header{background:var(--surface);border-bottom:1px solid var(--line);padding:13px 24px;display:flex;align-items:center;gap:13px;position:sticky;top:0;z-index:1000}
+.bbva-logo{height:22px;width:auto;display:block}
+.sep{width:1px;height:26px;background:var(--line-2)}
+.aa-logo{height:26px;width:auto}
+.mx-badge{background:var(--bbva);color:#fff;font-size:12px;font-weight:800;padding:3px 9px;border-radius:6px;letter-spacing:.02em}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.pill.demo{color:#8a5a00;background:#fdf3dc}
+.pill{font-size:12px;font-weight:600;color:var(--bbva-blue);background:var(--soft);padding:6px 13px;border-radius:20px}
+.main-tabs{max-width:1300px;margin:0 auto;padding:0 24px;display:flex;gap:4px;border-bottom:1px solid var(--line);background:var(--surface)}
+.main-tabs{position:sticky;top:53px;z-index:900;background:var(--surface)}
+.mtab{background:none;border:none;padding:13px 20px;font-size:14px;font-weight:600;color:var(--txt-2);cursor:pointer;border-bottom:2.5px solid transparent;font-family:inherit;transition:.14s}
+.mtab:hover:not(:disabled){color:var(--bbva)}
+.mtab.active{color:var(--bbva);border-bottom-color:var(--bbva)}
+.mtab:disabled{color:var(--line-2);cursor:default}
+.screen{max-width:1300px;margin:0 auto;padding:22px 24px;display:none;grid-template-columns:370px 1fr;gap:22px;align-items:start}
+.screen.active{display:grid;animation:fade .25s}
+.screen-full{display:none;padding:0 24px 40px}
+.screen-full.active{display:block;animation:fade .25s}
+.loader-overlay{display:none;position:fixed;inset:0;z-index:2000;background:rgba(244,247,250,.96);place-items:center}
+.loader-overlay.on{display:grid}
+.loader-box{text-align:center;padding:40px}
+.loader-title{font-size:16px;font-weight:700;color:var(--navy)}
+.loader-box .rl-steps{flex-direction:column;gap:9px}
+.btn-back{background:none;border:none;color:var(--bbva-blue);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:0 0 14px;margin:0}
+.btn-back:hover{text-decoration:underline}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;box-shadow:var(--shadow)}
+.card h2{font-size:15px;font-weight:700;color:var(--bbva);margin-bottom:4px}
+.card .sub{font-size:12.5px;color:var(--txt-2);line-height:1.5;margin-bottom:16px}
+.fld{display:block;margin-bottom:13px}
+.fld span{display:block;font-size:12px;font-weight:600;color:var(--txt-2);margin-bottom:5px}
+.fld input{width:100%;border:1px solid var(--line-2);border-radius:9px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none}
+.fld input:focus{border-color:var(--bbva-blue)}
+.fld select{width:100%;border:1px solid var(--line-2);border-radius:9px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;background:#fff;cursor:pointer}
+.fld select:focus{border-color:var(--bbva-blue)}
+.input-group{border:1px dashed var(--line-2);border-radius:10px;padding:14px 14px 2px;margin:4px 0 14px;background:var(--surface-2)}
+.input-group-tit{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--txt-2);margin-bottom:11px}
+.input-group-tit span{font-weight:600;color:var(--txt-3);text-transform:none;letter-spacing:0}
+.pack-info{font-size:11.5px;color:var(--txt-2);line-height:1.5;padding:11px;background:#fff;border:1px solid var(--line);border-radius:8px;margin:0 0 12px}
+.pack-info b{color:var(--navy)}
+.pack-chain{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:9px;text-align:center}
+.pack-chain span{font-size:10px;color:var(--txt-3);line-height:1.35}
+.pack-chain b{display:inline-block;margin-top:2px;font-size:12px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn{width:100%;background:var(--bbva);color:#fff;border:none;border-radius:9px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px}
+.btn:hover{background:var(--navy)}
+.btn-sec{background:var(--surface-2);color:var(--txt);border:1px solid var(--line-2)}
+.hint{font-size:11.5px;color:var(--txt-3);line-height:1.5;margin-top:10px;padding:10px 12px;background:var(--surface-2);border-radius:9px}
+#map{height:360px;border-radius:12px;border:1px solid var(--line);z-index:1}
+.map-wrap{position:relative}
+.map-bar{display:flex;align-items:center;gap:14px;padding:10px 14px;background:var(--surface-2);border-top:1px solid var(--line);font-size:12.5px;color:var(--txt-2)}
+.map-bar b{color:var(--navy)}
+.map-tools{position:absolute;top:10px;right:10px;z-index:500;background:var(--surface);border-radius:9px;box-shadow:var(--shadow);padding:5px;display:flex;flex-direction:column;gap:3px}
+.map-tool{font-size:11.5px;font-weight:600;color:var(--txt-2);background:none;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;text-align:left;font-family:inherit;white-space:nowrap}
+.map-tool:hover{background:var(--surface-2);color:var(--bbva-blue)}
+/* informe */
+.rep-empty{display:grid;place-items:center;height:300px;color:var(--txt-3);font-size:13.5px;text-align:center;padding:40px}
+.section-divider{display:flex;align-items:center;gap:12px;padding-bottom:4px}
+.section-title{font-size:19px;font-weight:800;color:var(--navy);margin:0}
+.section-tag{font-size:12px;font-weight:600;color:var(--bbva-blue);background:var(--soft);padding:5px 12px;border-radius:20px;margin-left:auto}
+/* loader */
+.rep-loader{padding:34px 18px;display:flex;gap:18px;align-items:flex-start}
+.rl-spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--bbva-blue);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.rl-steps{display:flex;flex-direction:column;gap:9px;padding-top:2px}
+.rl-step{font-size:13px;color:var(--txt-3);transition:.2s}
+.rl-step.active{color:var(--bbva-blue);font-weight:600}
+.rl-step.done{color:var(--green)}
+/* ficha establecimiento */
+.ficha{display:flex;gap:20px;align-items:center;padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.ficha-poly{width:120px;height:110px;flex-shrink:0;background:var(--surface-2);border-radius:10px;display:grid;place-items:center}
+.ficha-data{flex:1}
+.ficha-tit{font-size:18px;font-weight:800;color:var(--navy)}
+.ficha-sub{font-size:12.5px;color:var(--txt-2);margin:2px 0 12px}
+.ficha-grid{display:grid;grid-template-columns:auto 1fr;gap:5px 18px;font-size:12.5px}
+.ficha-grid .k{color:var(--txt-3)}
+.ficha-grid .v{font-weight:600;color:var(--txt)}
+/* datos cargados por el analista (input) */
+.inputs-card{border:1px solid var(--line-2);border-radius:11px;padding:16px 18px;margin-bottom:18px;background:var(--surface-2)}
+.inputs-hd{display:flex;align-items:center;gap:12px;margin-bottom:13px;flex-wrap:wrap}
+.inputs-tit{font-size:13px;font-weight:700;color:var(--navy)}
+.inputs-tag{font-size:11px;font-weight:600;color:var(--txt-2);background:#fff;border:1px solid var(--line-2);padding:4px 10px;border-radius:20px;margin-left:auto}
+.inputs-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px 20px}
+.inp{display:flex;flex-direction:column;gap:2px}
+.inp-k{font-size:10.5px;color:var(--txt-3);text-transform:uppercase;letter-spacing:.02em;font-weight:600}
+.inp-v{font-size:13.5px;font-weight:700;color:var(--navy)}
+.inputs-chain{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px;padding-top:13px;border-top:1px solid var(--line);text-align:center}
+.inputs-chain span{font-size:10.5px;color:var(--txt-3);line-height:1.4}
+.inputs-chain b{display:inline-block;margin-top:2px;font-size:13.5px;color:var(--navy)}
+/* resumen ejecutivo */
+.resumen{border-left:3px solid var(--bbva-blue);background:var(--soft);border-radius:0 10px 10px 0;padding:16px 18px;margin-bottom:20px}
+.resumen h3{font-size:13px;font-weight:700;color:var(--bbva);margin-bottom:4px}
+.resumen .rdesc{font-size:11.5px;color:var(--txt-3);margin-bottom:12px;font-style:italic}
+.resumen p{font-size:13px;line-height:1.6;color:var(--txt);margin-bottom:9px}
+.resumen p:last-child{margin:0}
+.resumen b{color:var(--navy)}
+/* tabs */
+.tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.tab{background:var(--surface-2);border:1px solid var(--line);border-radius:22px;padding:8px 16px;font-size:13px;font-weight:600;color:var(--txt-2);cursor:pointer;font-family:inherit}
+.tab.active{background:var(--bbva-blue);color:#fff;border-color:var(--bbva-blue)}
+.sec{display:none}
+.sec.active{display:block;animation:fade .25s}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.sec-tit{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:3px;display:flex;align-items:center;gap:8px}
+.sec-sub{font-size:12.5px;color:var(--txt-2);margin-bottom:16px}
+/* total grande */
+.total-row{display:flex;align-items:baseline;gap:12px;margin-bottom:16px}
+.total-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--txt-3);font-weight:700}
+.total-val{font-size:28px;font-weight:800;color:var(--bbva-blue);letter-spacing:-.02em}
+/* tabla */
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+.tbl th{background:var(--navy);color:#fff;text-align:left;padding:9px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.02em;font-weight:700}
+.tbl th:first-child{border-radius:7px 0 0 0}.tbl th:last-child{border-radius:0 7px 0 0}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--line)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl td:first-child{font-weight:700;color:var(--navy)}
+.tbl .num{text-align:right;font-variant-numeric:tabular-nums}
+.crop-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle}
+/* metrics */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:6px}
+.metric{background:var(--surface-2);border-radius:10px;padding:14px 16px}
+.metric-v{font-size:21px;font-weight:800;color:var(--navy)}
+.metric-l{font-size:11px;color:var(--txt-3);margin-top:3px}
+.chips{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.chip{background:var(--surface-2);border-radius:10px;padding:12px 16px;min-width:130px}
+.chip-v{font-size:17px;font-weight:800;color:var(--navy)}
+.chip-l{font-size:11px;color:var(--txt-3);margin-top:2px}
+/* barras historia */
+.bars{display:flex;align-items:flex-end;gap:12px;height:170px;margin:16px 0;padding:0 4px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;height:100%}
+.bar-stack{flex:1;width:60%;max-width:50px;display:flex;flex-direction:column;justify-content:flex-end;border-radius:5px 5px 0 0;overflow:hidden}
+.bar-seg{width:100%}
+.bar-lbl{font-size:10px;color:var(--txt-2);margin-top:6px;font-weight:600}
+.legend{display:flex;gap:16px;font-size:11.5px;color:var(--txt-2);margin-bottom:8px;flex-wrap:wrap}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:middle}
+/* clima mini */
+.clima-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:16px}
+/* hídrico cards */
+.hid-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.hid-card{border:1px solid var(--line);border-top:3px solid var(--red);border-radius:9px;padding:11px 13px}
+.hid-card.last{border-top-color:var(--bbva-blue);background:var(--soft)}
+.hid-mes{font-size:11px;color:var(--txt-3);font-weight:600}
+.hid-ha{font-size:16px;font-weight:800;color:var(--navy);margin:3px 0}
+.hid-det{font-size:10px;color:var(--txt-3);line-height:1.4}
+/* cruce crédito vs territorio */
+.cruce{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:6px}
+.cruce-col{border:1px solid var(--line);border-radius:11px;padding:15px 16px}
+.cruce-col.cargado{border-top:3px solid var(--txt-3);background:var(--surface-2)}
+.cruce-col.sensado{border-top:3px solid var(--bbva-blue);background:var(--soft)}
+.cruce-hd{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--txt-2);margin-bottom:11px}
+.cruce-col.sensado .cruce-hd{color:var(--bbva)}
+.cruce-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:12.5px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.04)}
+.cruce-row span{color:var(--txt-2)}
+.cruce-row b{color:var(--navy);text-align:right}
+.cruce-row.tot{border-bottom:none;border-top:1px solid var(--line-2);margin-top:4px;padding-top:9px}
+.cruce-row.tot b{font-size:15px}
+/* contraste punto por punto */
+.contraste-hd{display:flex;align-items:baseline;gap:10px;font-size:14px;font-weight:700;color:var(--navy);margin:20px 0 10px}
+.contraste-hd span{font-size:12px;font-weight:600;color:var(--txt-2);margin-left:auto}
+.contraste-tbl td{vertical-align:middle}
+.estado{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.estado.ok{color:var(--green);background:rgba(72,162,63,.12)}
+.estado.off{color:var(--red);background:rgba(192,57,43,.1)}
+.contraste-foot{font-size:11px;color:var(--txt-3);line-height:1.5;font-style:italic;margin-top:10px}
+.cappago{display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:6px 16px;border:1px solid var(--line);border-radius:11px;padding:14px 16px;margin-top:14px;background:var(--surface-2)}
+.cappago-l{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--txt-2);grid-column:1}
+.cappago-v{font-size:30px;font-weight:800;letter-spacing:-.02em;grid-column:2;grid-row:1/3}
+.cappago-d{font-size:12px;color:var(--txt-2);line-height:1.5;grid-column:3;grid-row:1/3}
+.cappago-d b{color:var(--navy)}
+.senal{border-left:3px solid var(--green);background:var(--surface-2);border-radius:0 10px 10px 0;padding:13px 16px;margin-top:16px}
+.senal-hd{font-size:13px;font-weight:700;margin-bottom:4px}
+.senal-txt{font-size:12.5px;color:var(--txt);line-height:1.55}
+.rep-foot{font-size:11.5px;color:var(--txt-3);line-height:1.5;font-style:italic;padding-top:16px;border-top:1px solid var(--line);margin-top:20px}
+.lectura{font-size:14px;color:var(--txt);line-height:1.6;background:var(--soft);border-radius:10px;padding:15px 17px;margin-bottom:18px}
+.lectura b{color:var(--navy);font-weight:700}
+.estado.campo{color:#8a5a00;background:#fdf3dc}
+.estado.pend{color:var(--txt-3);background:var(--surface-2)}
+.visita-card{border:1px solid var(--line-2);border-radius:11px;padding:18px;margin-top:22px;background:var(--surface-2)}
+.visita-hd{font-size:15px;font-weight:700;color:var(--navy)}
+.visita-sub{font-size:12.5px;color:var(--txt-2);margin:3px 0 14px;line-height:1.5}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.fld input[type=date]{background:#fff}
+.vnote{font-size:11.5px;color:#8a5a00;margin:-4px 0 14px}
+.vitems{display:flex;flex-direction:column;gap:8px}
+.vitem{display:grid;grid-template-columns:1.4fr 170px 1fr;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-left:3px solid #d4a017;border-radius:9px;padding:10px 12px}
+.vitem.gap{border-left-color:var(--red)}
+.vitem-tx{display:flex;flex-direction:column;gap:2px;font-size:12.5px}
+.vitem-tx b{color:var(--navy)}
+.vitem-tx span{color:var(--txt-2);font-size:12px;line-height:1.4}
+.vitem select,.vitem input{border:1px solid var(--line-2);border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;background:#fff;width:100%}
+.vmsg{margin-top:12px;font-size:13px;line-height:1.55;border-radius:9px;padding:12px 14px}
+.vmsg.ok{background:rgba(72,162,63,.1);border:1px solid rgba(72,162,63,.35)}
+.vmsg.err{background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.3);color:var(--red)}
+@media(max-width:700px){.row3{grid-template-columns:1fr}.vitem{grid-template-columns:1fr}.tbl{display:block;overflow-x:auto}}
+@media(max-width:980px){.screen{grid-template-columns:1fr}.metrics,.clima-grid{grid-template-columns:1fr 1fr}.hid-cards{grid-template-columns:1fr 1fr}.cruce{grid-template-columns:1fr}.inputs-grid{grid-template-columns:1fr 1fr}.inputs-chain,.pack-chain{grid-template-columns:1fr 1fr}.cappago{grid-template-columns:auto 1fr}}
+</style>
+</head>
+<body>
+<header>
+  <svg class="bbva-logo" viewBox="0 0 600 179.8" height="22" xmlns="http://www.w3.org/2000/svg"><g fill="#004481"><path d="M432.2,24.4l-51.6,98.2c-1.1,2.1-4.3,2.1-5.4,0l-51.6-98.2c-0.5-1-1.5-1.6-2.6-1.6h-25c-1.7,0-2.8,1.8-2,3.3l81.3,152.2c1.1,2.1,4.1,2.1,5.3,0l81.3-152.2c0.8-1.5-0.3-3.3-2-3.3h-25C433.7,22.8,432.7,23.4,432.2,24.4L432.2,24.4z"/><path d="M461.5,155.5l51.6-98.2c1.1-2.1,4.3-2.1,5.4,0l51.6,98.2c0.5,1,1.5,1.6,2.6,1.6h25c1.7,0,2.8-1.8,2-3.3L518.4,1.6c-1.1-2.1-4.1-2.1-5.3,0l-81.3,152.2c-0.8,1.5,0.3,3.3,2,3.3h25C459.9,157,461,156.4,461.5,155.5L461.5,155.5z"/><path d="M108.8,95.2c10.8-5.4,17.5-17.1,17.5-31.4c0-24.5-19.1-41.1-46-41.1H3c-1.7,0-3,1.3-3,3v151.1c0,1.7,1.3,3,3,3h74c37,0,56.5-15.9,56.5-47.1C133.5,102.3,108.8,95.2,108.8,95.2L108.8,95.2z M29,45.5h45.9c16.9,0,25.5,7.2,25.5,20.6c0,13.4-8.6,20.6-25.5,20.6H29c-1.6,0-3-1.3-3-3V48.5C26,46.8,27.3,45.5,29,45.5L29,45.5z M75.5,157l-46.5,0c-1.7,0-3-1.3-3-3l0-41.7c0-1.6,1.3-3,3-3h46.5c22.2,0,32.1,6.3,32.1,23.8C107.5,150.8,97.9,157,75.5,157L75.5,157z"/><path d="M267.5,95.2c10.8-5.4,17.5-17.1,17.5-31.4c0-24.5-19.1-41.1-46-41.1h-77.4c-1.7,0-3,1.3-3,3v151.1c0,1.7,1.3,3,3,3h74c37,0,56.5-15.9,56.5-47.1C292.2,102.3,267.5,95.2,267.5,95.2L267.5,95.2z M187.7,45.5h45.9c16.9,0,25.5,7.2,25.5,20.6c0,13.4-8.6,20.6-25.5,20.6h-45.9c-1.7,0-3-1.3-3-3V48.5C184.7,46.8,186,45.5,187.7,45.5L187.7,45.5z M234.1,157l-46.5,0c-1.6,0-3-1.3-3-3v-41.7c0-1.6,1.3-3,3-3h46.5c22.2,0,32.1,6.3,32.1,23.8C266.2,150.8,256.5,157,234.1,157L234.1,157z"/></g></svg>
+  <span class="sep"></span>
+  <img src="data:image/png;base64,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" alt="AgroAdvisor" class="aa-logo">
+  <span class="mx-badge">MX</span>
+  <div class="hdr-right">
+    <span class="pill demo">Demo · valores sensados simulados</span>
+    <span class="pill">Verificación técnica · pre-visita</span>
+  </div>
+</header>
+
+<!-- PESTAÑAS PRINCIPALES -->
+<nav class="main-tabs">
+  <button class="mtab active" id="mtab-ubicar" onclick="goScreen('ubicar')">Ubicar predio</button>
+  <button class="mtab" id="mtab-informe" onclick="goScreen('informe')" disabled>Informe agronómico</button>
+  <a class="mtab" href="index.html" style="margin-left:auto;text-decoration:none">Cartera FIRA</a>
+</nav>
+
+<!-- PANTALLA 1: UBICAR PREDIO -->
+<main class="screen active" id="screen-ubicar">
+  <div class="card">
+    <h2>Ubicar predio del crédito</h2>
+    <div class="sub">El banco envía el punto del predio (lat-lon) y las hectáreas del crédito. Ubica el polígono en el mapa; si el punto cayó desplazado, reubícalo a mano. Si hay croquis de una visita anterior, úsalo como base.</div>
+    <div class="row2">
+      <div class="fld"><span>Identificador del crédito</span><input id="credId" type="text" placeholder="MX-2026-00123"></div>
+      <div class="fld"><span>RFC del acreditado</span><input id="rfc" type="text" placeholder="GALJ800101AB3"></div>
+    </div>
+    <div class="row2">
+      <div class="fld"><span>Latitud</span><input id="lat" type="text" placeholder="20.4215"></div>
+      <div class="fld"><span>Longitud</span><input id="lng" type="text" placeholder="-101.5280"></div>
+    </div>
+    <div class="row2">
+      <div class="fld"><span>Hectáreas del crédito</span><input id="has" type="text" placeholder="90"></div>
+      <div class="fld"><span>Polígono</span><select id="origenPoly"><option value="inferido">Inferido del punto (1er ciclo)</option><option value="croquis">Croquis de visita anterior</option></select></div>
+    </div>
+
+    <div class="input-group">
+      <div class="input-group-tit">Crédito · <span>cargado por el banco</span></div>
+      <div class="row2">
+        <div class="fld"><span>Monto del crédito (MXN)</span><input id="monto" type="text" placeholder="1 500 000"></div>
+        <div class="fld"><span>Cultivo financiado</span><input id="cultFin" type="text" placeholder="Maíz"></div>
+      </div>
+      <div class="fld"><span>Paquete tecnológico FIRA</span>
+        <select id="packFira">
+          <option value="">— seleccionar —</option>
+        </select>
+      </div>
+      <div class="pack-info" id="packInfo" style="display:none"></div>
+    </div>
+
+    <button class="btn" onclick="ubicarPredio()">Ubicar en el mapa</button>
+    <button class="btn btn-sec" style="margin-top:10px" onclick="ejemplo()">Cargar ejemplo del Bajío</button>
+    <div class="hint" id="hint">El punto del banco (marcador rojo) y el polígono inferido con las hectáreas declaradas. Muévelo o ajusta área y rotación hasta que coincida con el predio real.</div>
+  </div>
+  <div>
+    <div class="card map-wrap" style="padding:0;overflow:hidden">
+      <div id="map"></div>
+      <div class="map-tools" id="mapTools" style="display:none">
+        <button class="map-tool" onclick="ajustarArea(1.1)">⊕ Agrandar</button>
+        <button class="map-tool" onclick="ajustarArea(0.9)">⊖ Reducir</button>
+        <button class="map-tool" onclick="rotarPoly()">⟳ Rotar</button>
+        <button class="map-tool" onclick="toggleSat()">◐ Cambiar vista</button>
+      </div>
+      <div class="map-bar" id="mapBar" style="display:none"></div>
+    </div>
+  </div>
+</main>
+
+<!-- PANTALLA 2: INFORME AGRONÓMICO -->
+<div class="screen-full" id="screen-informe">
+  <div class="card" style="max-width:1000px;margin:22px auto"><div id="repBody"></div></div>
+</div>
+
+<!-- LOADER DE TRANSICIÓN (pantalla completa) -->
+<div class="loader-overlay" id="loaderOverlay">
+  <div class="loader-box">
+    <div class="rl-spin" style="margin:0 auto 20px"></div>
+    <div class="loader-title">Sensorizando el territorio con Bold</div>
+    <div class="rl-steps" id="rlSteps" style="margin-top:18px;text-align:left;display:inline-flex"></div>
+  </div>
+</div>
+
+<script>
+let map, pointMarker, polyRect, satLayer, osmLayer, satOn=true;
+let CENTER=null, HA=0, ANG=0, SCALE=1;
+
+// Catálogo de paquetes tecnológicos FIRA (estructura tipo Agrocostos, precargada).
+// Cada paquete trae su cadena económica: costo de producción/ha, rinde esperado y precio.
+// De ahí el informe deriva ingreso, utilidad y capacidad de pago.
+// Números ILUSTRATIVOS para la demo (MXN/ha, convertidos de la versión en USD). En producción provienen del Agrocosto
+// vigente de FIRA por región/cultivo/tecnología.
+const PACKS_FIRA=[
+  {id:'maiz-riego',     cult:'Maíz',  nombre:'Maíz · riego (gravedad) · Bajío',  costoHa:21800, rindeObj:11,  precio:3570, ciclo:'Primavera-Verano', siembra:'marzo–abril', lluviaEsp:[90,220], desc:'Semilla híbrida, fertilización completa, riego por gravedad, control integrado de plagas.'},
+  {id:'maiz-riego-cons',cult:'Maíz',  nombre:'Maíz · riego · labranza de conservación', costoHa:19200, rindeObj:10.5,precio:3570, ciclo:'Primavera-Verano', siembra:'marzo–abril', lluviaEsp:[90,220], desc:'Igual que riego pleno, con labranza de conservación: menor costo de preparación.'},
+  {id:'maiz-temporal',  cult:'Maíz',  nombre:'Maíz · temporal',                  costoHa:10400, rindeObj:5.5, precio:3570, ciclo:'Primavera-Verano', siembra:'mayo–junio', lluviaEsp:[400,650], desc:'Semilla mejorada, fertilización básica, sin riego. Depende de la ventana de lluvia.'},
+  {id:'trigo-riego',    cult:'Trigo', nombre:'Trigo · riego · Bajío',            costoHa:17800, rindeObj:6.5, precio:3980, ciclo:'Otoño-Invierno', siembra:'noviembre–diciembre', lluviaEsp:[40,120], desc:'Semilla certificada, fertilización completa, riego tecnificado.'},
+  {id:'trigo-temporal', cult:'Trigo', nombre:'Trigo · temporal',                 costoHa:8100,  rindeObj:3.5, precio:3980, ciclo:'Otoño-Invierno', siembra:'noviembre–diciembre', lluviaEsp:[120,280], desc:'Semilla mejorada, fertilización básica, sin riego.'}
+];
+function initPacks(){
+  const sel=document.getElementById('packFira');
+  sel.innerHTML='<option value="">— seleccionar —</option>'+
+    PACKS_FIRA.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
+  sel.onchange=showPack;
+}
+function getPack(){const id=document.getElementById('packFira').value;return PACKS_FIRA.find(p=>p.id===id)||null;}
+function showPack(){
+  const p=getPack(), box=document.getElementById('packInfo');
+  if(!p){box.style.display='none';return;}
+  const ingHa=Math.round(p.rindeObj*p.precio), utilHa=ingHa-p.costoHa;
+  box.style.display='block';
+  box.innerHTML=`<div class="pack-chain">
+      <span>Costo prod.<br><b>MXN ${p.costoHa}/ha</b></span>
+      <span>Rinde esp.<br><b>${p.rindeObj} t/ha</b></span>
+      <span>Ingreso esp.<br><b>MXN ${ingHa.toLocaleString('es-MX')}/ha</b></span>
+      <span>Utilidad esp.<br><b style="color:var(--green)">MXN ${utilHa.toLocaleString('es-MX')}/ha</b></span>
+    </div>
+    <span style="color:var(--txt-3)">${p.desc}</span>`;
+}
+
+osmLayer=L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:'© OpenStreetMap · © CARTO'});
+satLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri'});
+map=L.map('map',{layers:[satLayer]}).setView([21.5,-101.5],6);
+initPacks();
+const QP=new URLSearchParams(location.search);
+const ESC=QP.get('esc'); // ok | sup | cult | siembra : fuerza el escenario para que coincida con el tablero
+window.addEventListener('load',()=>{
+  if(!QP.get('id'))return;
+  const set=(k,v)=>{if(v!==null)document.getElementById(k).value=v;};
+  set('credId',QP.get('id'));set('rfc',QP.get('rfc'));set('lat',QP.get('lat'));set('lng',QP.get('lng'));
+  set('has',QP.get('ha'));set('monto',QP.get('monto'));set('cultFin',QP.get('cult'));
+  if(QP.get('pack'))document.getElementById('packFira').value=QP.get('pack');
+  if(QP.get('croquis')==='1')document.getElementById('origenPoly').value='croquis';
+  showPack();ubicarPredio();setTimeout(verificar,500);
+});
+
+function ejemplo(){
+  // El Bajío (Guanajuato) — zona de maíz y trigo en rotación
+  document.getElementById('credId').value='MX-2026-00123';
+  document.getElementById('rfc').value='GALJ800101AB3';
+  document.getElementById('lat').value='20.4215';
+  document.getElementById('lng').value='-101.5280';
+  document.getElementById('has').value='90';
+  document.getElementById('monto').value='1 500 000';
+  document.getElementById('cultFin').value='Maíz';
+  document.getElementById('packFira').value='maiz-riego';
+  showPack();
+  ubicarPredio();
+}
+function rectCoords(lat,lng,ha,angDeg,scale){
+  const areaM2=ha*10000*scale, side=Math.sqrt(areaM2), half=side/2;
+  const mLat=111320, mLng=111320*Math.cos(lat*Math.PI/180), ang=angDeg*Math.PI/180;
+  return [[-half,-half],[half,-half],[half,half],[-half,half]].map(([x,y])=>{
+    const xr=x*Math.cos(ang)-y*Math.sin(ang), yr=x*Math.sin(ang)+y*Math.cos(ang);
+    return [lat+yr/mLat, lng+xr/mLng];
+  });
+}
+function croquisCoords(lat,lng,ha,angDeg,scale){
+  // forma irregular de 6 vértices con área aprox. a la declarada (simula el croquis de la visita anterior)
+  const r=Math.sqrt(ha*10000*scale/2.6), mLat=111320, mLng=111320*Math.cos(lat*Math.PI/180), ang=angDeg*Math.PI/180;
+  const f=[1.05,0.85,1.15,0.95,1.1,0.8];
+  return f.map((k,i)=>{const a=ang+i*Math.PI/3;return [lat+Math.sin(a)*r*k/mLat, lng+Math.cos(a)*r*k/mLng];});
+}
+function esCroquis(){return document.getElementById('origenPoly').value==='croquis';}
+function drawPoly(){
+  const coords=esCroquis()?croquisCoords(CENTER[0],CENTER[1],HA,ANG,SCALE):rectCoords(CENTER[0],CENTER[1],HA,ANG,SCALE);
+  if(polyRect)map.removeLayer(polyRect);
+  const pc=esCroquis()?'#f0c419':'#49a5e6';
+  polyRect=L.polygon(coords,{color:pc,weight:2,fillColor:pc,fillOpacity:.28,draggable:true}).addTo(map);
+  polyRect.on('dragend',function(){const c=polyRect.getBounds().getCenter();CENTER=[c.lat,c.lng];updBar();});
+  updBar();
+}
+function updBar(){
+  const ha=Math.round(HA*SCALE);
+  document.getElementById('mapBar').innerHTML=`<b>${ha} ha</b> · ${esCroquis()?'croquis de visita anterior (simulado)':'predio inferido del punto'} · centro ${CENTER[0].toFixed(5)}, ${CENTER[1].toFixed(5)} · <span style="color:var(--txt-3)">arrastra el polígono para reubicarlo</span>`;
+}
+function ubicarPredio(){
+  const lat=parseFloat(document.getElementById('lat').value), lng=parseFloat(document.getElementById('lng').value);
+  HA=parseFloat(document.getElementById('has').value)||50;
+  if(isNaN(lat)||isNaN(lng)){document.getElementById('hint').innerHTML='⚠ Ingresa latitud y longitud válidas.';return;}
+  CENTER=[lat,lng];ANG=0;SCALE=1;
+  map.setView(CENTER,15);
+  if(pointMarker)map.removeLayer(pointMarker);
+  pointMarker=L.circleMarker(CENTER,{radius:6,color:'#c0392b',fillColor:'#c0392b',fillOpacity:1,weight:2}).addTo(map).bindTooltip('Punto enviado por el banco');
+  drawPoly();
+  document.getElementById('mapTools').style.display='flex';
+  document.getElementById('mapBar').style.display='flex';
+  if(!document.getElementById('verBtn')){
+    const b=document.createElement('button');b.id='verBtn';b.className='btn';b.style.marginTop='12px';
+    b.textContent='▶ Sensorizar y verificar';b.onclick=verificar;
+    document.querySelector('.card').appendChild(b);
+  }
+}
+function ajustarArea(f){SCALE*=f;drawPoly();}
+function rotarPoly(){ANG=(ANG+15)%360;drawPoly();}
+function toggleSat(){satOn=!satOn;if(satOn){map.removeLayer(osmLayer);map.addLayer(satLayer);}else{map.removeLayer(satLayer);map.addLayer(osmLayer);}}
+
+// ============ LOADER + INFORME ============
+function goScreen(s){
+  document.querySelectorAll('.screen,.screen-full').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.mtab').forEach(x=>x.classList.remove('active'));
+  if(s==='ubicar'){document.getElementById('screen-ubicar').classList.add('active');document.getElementById('mtab-ubicar').classList.add('active');setTimeout(()=>{if(map)map.invalidateSize();},100);}
+  else{document.getElementById('screen-informe').classList.add('active');document.getElementById('mtab-informe').classList.add('active');}
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function verificar(){
+  // loader a pantalla completa en la transición
+  const ov=document.getElementById('loaderOverlay');ov.classList.add('on');
+  const pasos=['Validando geometría del predio','Consultando sensorización de Bold','Detectando cultivo en el territorio','Analizando estado, vigor y rinde','Reconstruyendo historia productiva','Analizando clima y riesgo hídrico','Armando el informe de campo'];
+  let i=0;
+  const render=()=>{document.getElementById('rlSteps').innerHTML=pasos.map((p,j)=>`<div class="rl-step ${j<i?'done':(j===i?'active':'')}">${j<i?'✓':(j===i?'◈':'○')} ${p}</div>`).join('');};
+  render();
+  const iv=setInterval(()=>{i++;if(i<=pasos.length)render();else{
+    clearInterval(iv);
+    mostrarInforme();
+    ov.classList.remove('on');
+    document.getElementById('mtab-informe').disabled=false;
+    goScreen('informe');
+  }},600);
+}
+
+const PRECIOS={'Maíz':3570,'Trigo':3980,'Sorgo':3240,'Frijol':14400};
+const RINDES={'Maíz':11,'Trigo':6,'Sorgo':7,'Frijol':2.2};
+const CROP_COLOR={'Maíz':'var(--maiz)','Trigo':'var(--trigo)','Sorgo':'var(--girasol)','Frijol':'var(--soja)'};
+const fmt=n=>'MXN '+Math.round(n).toLocaleString('es-MX');
+
+function mostrarInforme(){
+  const haReal=Math.round(HA*SCALE);
+  const declarado=(document.getElementById('cultFin').value||'Maíz').trim();
+  const credId=document.getElementById('credId').value||'MX-2026-00123';
+  const rfc=(document.getElementById('rfc').value||'— no cargado').toUpperCase();
+  const seed=Math.abs(Math.round((CENTER[0]+CENTER[1])*10000));
+  const cultivos=['Maíz','Trigo'];  // granos del Bajío en rotación (maíz P-V, trigo O-I)
+  let coincide=(seed%10)<7, parcial=!coincide&&(seed%10)<9;
+  if(ESC==='ok'||ESC==='siembra'){coincide=true;parcial=false;}
+  if(ESC==='sup'){coincide=false;parcial=true;}
+  if(ESC==='cult'){coincide=false;parcial=false;}
+  let sensado=coincide?declarado:(parcial?declarado:cultivos[seed%cultivos.length]);
+  if(ESC==='cult'&&sensado.toLowerCase()===declarado.toLowerCase())sensado=['Maíz','Trigo','Sorgo'].find(c=>c.toLowerCase()!==declarado.toLowerCase());
+  const mismoCultivo=sensado.toLowerCase()===declarado.toLowerCase();
+  const haSensada=coincide?haReal:(parcial?Math.round(haReal*(0.5+(seed%30)/100)):Math.round(haReal*(seed%40)/100));
+  const cobertura=Math.round(haSensada/haReal*100);
+  const estadosCult=['Emergencia','Desarrollo vegetativo','Floración','Llenado de grano','Madurez'];
+  let estadoCult=estadosCult[seed%estadosCult.length];
+  // si el cultivo detectado es el del paquete, la etapa sigue el calendario del ciclo (mes actual)
+  const packE=getPack();
+  if(packE&&['maíz','trigo'].includes(sensado.toLowerCase())){
+    const m=new Date().getMonth(); // 0=ene
+    const CAL={
+      'maiz-riego':     ['Madurez','Madurez','Emergencia','Emergencia','Desarrollo vegetativo','Desarrollo vegetativo','Floración','Llenado de grano','Madurez','Madurez','Madurez','Madurez'],
+      'maiz-temporal':  ['Madurez','Madurez','Madurez','Madurez','Emergencia','Emergencia','Desarrollo vegetativo','Desarrollo vegetativo','Floración','Llenado de grano','Madurez','Madurez'],
+      'trigo':          ['Desarrollo vegetativo','Desarrollo vegetativo','Floración','Llenado de grano','Madurez','Madurez','Madurez','Madurez','Madurez','Madurez','Emergencia','Emergencia']
+    };
+    const k=sensado==='Trigo'?'trigo':(packE.id==='maiz-temporal'?'maiz-temporal':'maiz-riego');
+    estadoCult=CAL[k][m];
+  }
+  const vigor=['Bajo','Medio','Alto'][coincide?2:(parcial?1:0)];
+  const vigorColor=vigor==='Alto'?'var(--green)':(vigor==='Medio'?'var(--amber)':'var(--red)');
+  const rinde=((RINDES[sensado]||9)*(vigor==='Alto'?1:(vigor==='Medio'?0.82:0.55)));
+  const packSel=getPack();
+  // precio: si el cultivo sensado coincide con el financiado, usamos el precio del pack (misma vara); si no, tabla de precios
+  const precio=(packSel&&packSel.cult.toLowerCase()===sensado.toLowerCase())?packSel.precio:(PRECIOS[sensado]||3500);
+  const valor=Math.round(haSensada*rinde*precio);
+  const ndvi=(0.38+(vigor==='Alto'?0.42:(vigor==='Medio'?0.22:0.05))+(seed%8)/100).toFixed(2);
+  const hoy=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
+  const consulta='MX-'+(100000+seed%900000);
+  // clima simulado (declarado arriba porque el contraste FIRA lo usa)
+  const lluvia90=Math.round(60+(seed%120));
+  const tempMedia=(18+(seed%10)).toFixed(1);
+
+  // ===== CRÉDITO (input del usuario) vs. territorio (sensado por Bold) =====
+  const credito=parseFloat((document.getElementById('monto').value||'0').replace(/[^\d.]/g,''))||0;
+  const cultFin=declarado; // el cultivo financiado ES el declarado en el crédito (único dato)
+  const pack=packSel; // mismo paquete FIRA seleccionado
+  // Cadena económica del paquete FIRA (input), sobre las ha del crédito
+  const costoHa=pack?pack.costoHa:0;
+  const costoTot=costoHa*haReal;                                   // costo de producción esperado del pack
+  const ingEspHa=pack?Math.round(pack.rindeObj*pack.precio):0;
+  const ingEspTot=ingEspHa*haReal;                                 // ingreso esperado si se cumple el pack
+  const utilEspTot=ingEspTot-costoTot;                             // utilidad esperada del pack
+  const capPago=credito?Math.round(utilEspTot/credito*100):0;      // utilidad esperada vs. crédito otorgado
+  const cultFinActivo=sensado.toLowerCase()===cultFin.toLowerCase(); // ¿el cultivo financiado está en el campo?
+
+  // ===== CONTRASTE punto por punto: supuesto del paquete FIRA vs. territorio sensado =====
+  // ¿la siembra detectada cae en la ventana del pack? (coherente con el caso: si coincide, en ventana)
+  let siembraEnVentana=pack?(seed%10)<6:false;
+  if(ESC==='ok'||ESC==='sup'||ESC==='cult')siembraEnVentana=true;
+  if(ESC==='siembra')siembraEnVentana=false;
+  const rindeObjPack=pack?pack.rindeObj:0;
+  const rindeOk=pack?rinde>=rindeObjPack*0.85:false;       // rinde en línea si ≥85% del objetivo
+  const rindeDesvio=pack?Math.round((rinde/rindeObjPack-1)*100):0;
+  // fecha de siembra detectada: dentro de la ventana del pack si está en línea; si no, un mes corrido
+  const fueraMeses=['ene','feb','jul','ago','sep'];
+  const siembraDet=pack?(siembraEnVentana?pack.siembra+' 2026':fueraMeses[seed%fueraMeses.length]+' 2026'):'—';
+  // clima: lluvia real del trimestre vs. rango esperado del pack
+  const climaOk=pack?(lluvia90>=pack.lluviaEsp[0]):false;
+  // filas del contraste (solo lo que Bold puede ver)
+  const contraste = pack ? [
+    {k:'Cultivo', esp:pack.cult, det:sensado, ok:cultFinActivo},
+    {k:'Superficie', esp:`${haReal} ha`, det:`${haSensada} ha · ${cobertura}%`, ok:cobertura>=85},
+    {k:'Rinde', esp:`${rindeObjPack} t/ha (objetivo)`, det:`${rinde.toFixed(1)} t/ha (potencial)`, ok:rindeOk},
+    {k:'Ventana de siembra', esp:pack.siembra, det:siembraDet, ok:siembraEnVentana},
+    {k:'Clima del ciclo', esp:`${pack.lluviaEsp[0]}–${pack.lluviaEsp[1]} mm`, det:`${lluvia90} mm (90 d)`, ok:climaOk}
+  ] : [];
+  const enLinea=contraste.filter(c=>c.ok).length, desvios=contraste.length-enLinea;
+  // señal de riesgo productivo (NO decisión crediticia)
+  let senal, senalColor, senalTxt;
+  if(cultFinActivo && cobertura>=85){
+    senal='Sin alertas productivas'; senalColor='var(--green)';
+    senalTxt=`El cultivo financiado (${cultFin}) está presente en el ${cobertura}% de la superficie del crédito, en ${estadoCult.toLowerCase()} con vigor ${vigor.toLowerCase()}.`;
+  } else if(cultFinActivo){
+    senal='Atención: superficie parcial'; senalColor='var(--amber)';
+    senalTxt=`El cultivo financiado (${cultFin}) está presente, pero solo en el ${cobertura}% de la superficie del crédito. ${haReal-haSensada} ha sin cultivo activo detectado.`;
+  } else {
+    senal='Atención: cultivo no coincide'; senalColor='var(--red)';
+    senalTxt=`El cultivo detectado en el territorio es ${sensado}, distinto del financiado en el crédito (${cultFin}). Actividad en el ${cobertura}% de la superficie.`;
+  }
+
+  // historia simulada (3 ciclos)
+  const ciclos=['2023-2024','2024-2025','2025-2026'];
+  const rotac=[cultivos[seed%cultivos.length], cultivos[(seed+1)%cultivos.length], sensado];
+  const hist=ciclos.map((c,i)=>{const cr=rotac[i];const ha=Math.round(haReal*(0.8+((seed+i)%20)/100));const r=(RINDES[cr]||9)*(0.75+((seed+i)%25)/100);const v=Math.round(ha*r*(PRECIOS[cr]||3500));return {c,cr,ha,r:r.toFixed(1),v};});
+
+  // hídrico simulado (6 meses)
+  const mesesH=['may','jun','jul','ago','sep','oct'];
+  const hid=mesesH.map((m,i)=>({m:m+' 2026',ha:Math.round(haReal*((seed+i)%35)/100),last:i===5}));
+
+  const lectura = mismoCultivo && cobertura>=85
+    ? `El predio muestra <b>${sensado}</b> en ${estadoCult.toLowerCase()}, con vigor ${vigor.toLowerCase()} y actividad en el ${cobertura}% de la superficie declarada. La realidad del campo coincide con el cultivo informado en el crédito.`
+    : mismoCultivo
+    ? `Se detecta <b>${sensado}</b> (el cultivo declarado), con actividad en el ${cobertura}% de la superficie — ${haReal-haSensada} ha sin cultivo activo detectado al momento de la verificación.`
+    : `El cultivo detectado en el territorio es <b>${sensado}</b>, distinto del declarado en el crédito (${declarado}). Actividad en el ${cobertura}% de la superficie.`;
+
+  // ===== PRE-VISITA: qué cubre Bold y qué queda para el verificador =====
+  const productivo=['Desarrollo vegetativo','Floración','Llenado de grano','Madurez'].includes(estadoCult);
+  const esRiego=pack&&/riego/i.test(pack.nombre);
+  // etapas tipo Agrocostos. quien: 'bold' (lo cubre la sensorización) | 'perito' (solo en campo)
+  const etapas=[
+    {e:'Preparación del terreno', quien:'bold',
+     ok:cultFinActivo, txt:cultFinActivo?(productivo?`Se da por cumplida: el cultivo financiado ya está en ${estadoCult.toLowerCase()}.`:'Se da por cumplida: hay emergencia del cultivo financiado.'):'No se puede dar por cumplida: el cultivo en el predio no es el financiado.'},
+    {e:'Siembra', quien:'bold', ok:cultFinActivo&&siembraEnVentana,
+     txt:!cultFinActivo?`Se detecta ${sensado}, no ${cultFin}.`:(siembraEnVentana?`Detectada dentro de la ventana del paquete (${pack?pack.siembra:'—'}).`:`Detectada en ${siembraDet}, fuera de la ventana del paquete (${pack?pack.siembra:'—'}).`)},
+    {e:'Desarrollo del cultivo', quien:'bold', ok:cobertura>=85&&vigor!=='Bajo',
+     txt:`${estadoCult}, vigor ${vigor.toLowerCase()}, activo en ${haSensada} de ${haReal} ha (${cobertura}%).`},
+    {e:'Fertilización', quien:'perito', txt:'La sensorización no mide insumos aplicados. Verificar facturas o evidencia en campo.'},
+    {e:'Control de malezas y plagas', quien:'perito', txt:'Aplicación de agroquímicos: verificar en campo.'},
+    ...(esRiego?[{e:'Riego', quien:'perito', txt:'Verificar infraestructura y láminas aplicadas en campo.'}]:[]),
+    {e:'Cosecha', quien:'pend', txt:estadoCult==='Madurez'?'Próxima a cosecha: programar la verificación de cierre.':'Todavía no corresponde en este ciclo.'}
+  ];
+  const gaps=contraste.filter(c=>!c.ok&&c.k!=='Clima del ciclo'); // el clima es contexto, no destino del crédito: no se manda a verificar
+  // ítems de la visita: primero los desvíos detectados, después lo que solo se ve en campo
+  const itemsVisita=[
+    ...gaps.map(g=>({tipo:'gap',k:g.k,d:`Paquete: ${g.esp}. Detectado: ${g.det}.`})),
+    ...etapas.filter(x=>x.quien==='perito').map(x=>({tipo:'campo',k:x.e,d:x.txt}))
+  ];
+  window.__VISITA={credId,items:itemsVisita};
+  const hayGap=gaps.length>0;
+
+  const body=document.getElementById('repBody');
+  body.innerHTML=`
+    <button class="btn-back" onclick="goScreen('ubicar')">← Volver a ubicar predio</button>
+    <!-- FICHA -->
+    <div class="ficha">
+      <div class="ficha-poly"><svg width="90" height="80" viewBox="0 0 90 80"><polygon points="20,15 72,22 66,65 15,58" fill="rgba(73,165,230,.25)" stroke="#49a5e6" stroke-width="2"/></svg></div>
+      <div class="ficha-data">
+        <div class="ficha-tit">Predio ${credId}</div>
+        <div class="ficha-sub">Verificación técnica de destino de crédito · Operaciones</div>
+        <div class="ficha-grid">
+          <span class="k">Acreditado (RFC)</span><span class="v">${rfc}</span>
+          <span class="k">Superficie</span><span class="v">${haReal} ha</span>
+          <span class="k">Ubicación</span><span class="v">${CENTER[0].toFixed(4)}, ${CENTER[1].toFixed(4)} · México</span>
+          <span class="k">N° de verificación</span><span class="v">${consulta}</span>
+          <span class="k">Fecha</span><span class="v">${hoy}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DATOS CARGADOS POR EL ANALISTA -->
+    <div class="inputs-card">
+      <div class="inputs-hd">
+        <span class="inputs-tit">Información cargada para la verificación</span>
+        <span class="inputs-tag">Input del analista · no sensado por Bold</span>
+      </div>
+      <div class="inputs-grid">
+        <div class="inp"><span class="inp-k">Identificador del crédito</span><span class="inp-v">${credId}</span></div>
+        <div class="inp"><span class="inp-k">RFC del acreditado</span><span class="inp-v">${rfc}</span></div>
+        <div class="inp"><span class="inp-k">Punto enviado por el banco</span><span class="inp-v">${CENTER[0].toFixed(4)}, ${CENTER[1].toFixed(4)}</span></div>
+        <div class="inp"><span class="inp-k">Superficie del crédito</span><span class="inp-v">${haReal} ha</span></div>
+        <div class="inp"><span class="inp-k">Monto del crédito</span><span class="inp-v">${credito?'MXN '+credito.toLocaleString('es-MX'):'— no cargado'}</span></div>
+        <div class="inp"><span class="inp-k">Cultivo financiado</span><span class="inp-v">${cultFin}</span></div>
+        <div class="inp"><span class="inp-k">Paquete tecnológico FIRA</span><span class="inp-v">${pack?pack.nombre:'— no cargado'}</span></div>
+      </div>
+      ${pack?`<div class="inputs-chain">
+        <span>Costo prod.<br><b>${fmt(costoTot)}</b></span>
+        <span>Rinde esperado<br><b>${pack.rindeObj} t/ha</b></span>
+        <span>Ingreso esperado<br><b>${fmt(ingEspTot)}</b></span>
+        <span>Utilidad esperada<br><b style="color:var(--green)">${fmt(utilEspTot)}</b></span>
+      </div>`:''}
+    </div>
+
+    <!-- RESUMEN EJECUTIVO IA -->
+    <div class="resumen">
+      <h3>Resumen de la verificación</h3>
+      <div class="rdesc">Generado con inteligencia artificial a partir de la sensorización del predio. Describe la realidad del campo — la evaluación del crédito corresponde a Operaciones.</div>
+      ${credito||pack?`<p><b>Crédito.</b> El crédito financió ${cultFin}${pack?' bajo el paquete '+pack.nombre:''}${credito?' por MXN '+credito.toLocaleString('es-MX'):''}. ${senalTxt}</p>`:''}
+      <p><b>Cultivo.</b> ${lectura}</p>
+      <p><b>Estado productivo.</b> El cultivo se encuentra en ${estadoCult.toLowerCase()}, con vigor ${vigor.toLowerCase()} (NDVI ${ndvi}) y un rinde potencial estimado de ${rinde.toFixed(1)} t/ha sobre las ${haSensada} ha activas.</p>
+      <p><b>Historia y clima.</b> El predio muestra una rotación de ${rotac.filter((v,i,a)=>a.indexOf(v)===i).join(' · ')} en los últimos ciclos. En los últimos 90 días se registraron ${lluvia90} mm de lluvia con una temperatura media de ${tempMedia} °C.</p>
+    </div>
+
+    <!-- COMPARACIÓN declarado vs sensado -->
+    <div class="metrics" style="margin-bottom:20px">
+      <div class="metric"><div class="metric-v">${declarado}</div><div class="metric-l">Cultivo financiado</div></div>
+      <div class="metric"><div class="metric-v" style="color:${mismoCultivo?'var(--green)':'var(--amber)'}">${sensado}</div><div class="metric-l">Cultivo detectado</div></div>
+      <div class="metric"><div class="metric-v">${haSensada} ha · ${cobertura}%</div><div class="metric-l">Superficie activa vs. crédito</div></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" onclick="showSec('prev',this)">Pre-visita</button>
+      <button class="tab" onclick="showSec('cred',this)">Crédito vs. inversión</button>
+      <button class="tab" onclick="showSec('val',this)">Valorización</button>
+      <button class="tab" onclick="showSec('hist',this)">Historia productiva</button>
+      <button class="tab" onclick="showSec('clima',this)">Clima</button>
+      <button class="tab" onclick="showSec('hid',this)">Riesgo hídrico</button>
+    </div>
+
+    <!-- PRE-VISITA -->
+    <div class="sec active" id="sec-prev">
+      <div class="sec-tit">📋 Informe pre-visita</div>
+      <div class="sec-sub">Lo que la sensorización ya cubre y lo que el verificador tiene que confirmar en campo. ${hayGap?`<b>${gaps.length} desvío${gaps.length>1?'s':''} a verificar.</b>`:'<b>Sin desvíos detectados</b>: la visita queda sujeta a la muestra normativa.'}</div>
+
+      <div class="contraste-hd" style="margin-top:4px">Etapas del paquete <span>${etapas.filter(x=>x.quien==='bold').length} cubiertas por sensorización · ${etapas.filter(x=>x.quien==='perito').length} en campo</span></div>
+      <table class="tbl contraste-tbl">
+        <thead><tr><th>Etapa</th><th>Quién la verifica</th><th>Evidencia</th><th class="num">Estado</th></tr></thead>
+        <tbody>${etapas.map(x=>`<tr>
+          <td>${x.e}</td>
+          <td style="font-weight:400;color:var(--txt-2)">${x.quien==='bold'?'Sensorización':(x.quien==='perito'?'Verificador en campo':'—')}</td>
+          <td style="font-weight:400">${x.txt}</td>
+          <td class="num">${x.quien==='bold'?`<span class="estado ${x.ok?'ok':'off'}">${x.ok?'✓ cubierta':'⚠ desvío'}</span>`:(x.quien==='perito'?'<span class="estado campo">en campo</span>':'<span class="estado pend">pendiente</span>')}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+      <div class="contraste-foot">Si el cultivo financiado está en etapa productiva, la preparación y la siembra se dan por cumplidas sin detectar labranza. Fertilización y agroquímicos no se sensan.</div>
+
+      <div class="visita-card" id="visitaCard">
+        <div class="visita-hd">Resultado de la visita</div>
+        <div class="visita-sub">Lo carga el verificador. Cada ítem se confirma o se observa; el registro queda asociado al crédito ${credId}.</div>
+        <div class="row3">
+          <label class="fld"><span>Verificador</span><input id="vNombre" type="text" placeholder="Nombre y apellido"></label>
+          <label class="fld"><span>Matrícula de verificador FIRA</span><input id="vMat" type="text" placeholder="Ej. FIRA-PE-0412"></label>
+          <label class="fld"><span>Fecha de la visita</span><input id="vFecha" type="date"></label>
+        </div>
+        <div class="vnote">Validación de la matrícula contra el padrón FIRA: pendiente de confirmar con el banco.</div>
+        <div class="vitems">${itemsVisita.map((it,i)=>`<div class="vitem ${it.tipo}">
+          <div class="vitem-tx"><b>${it.tipo==='gap'?'⚠ ':''}${it.k}</b><span>${it.d}</span></div>
+          <select id="vRes${i}"><option value="">— resultado —</option><option>Confirmado</option><option>Con observación</option><option>No verificado</option></select>
+          <input id="vObs${i}" type="text" placeholder="Observación (opcional)">
+        </div>`).join('')}</div>
+        <label class="fld" style="margin-top:12px"><span>Dictamen del verificador sobre el destino del crédito</span>
+          <select id="vDict"><option value="">— seleccionar —</option><option>Cumplido</option><option>Cumplido parcialmente</option><option>No cumplido</option></select></label>
+        <button class="btn" style="max-width:260px" onclick="registrarVisita()">Registrar visita</button>
+        <div id="vMsg"></div>
+      </div>
+    </div>
+
+    <!-- CRÉDITO VS INVERSIÓN -->
+    <div class="sec" id="sec-cred">
+      <div class="sec-tit">🏦 Crédito vs. inversión en el territorio</div>
+      <div class="sec-sub">Cruza lo que el banco financió <b>(cargado)</b> con lo que Bold detecta en el campo <b>(sensado)</b>. AgroAdvisor muestra la evidencia; la evaluación del crédito la realiza Operaciones.</div>
+
+      ${credito||pack?`
+      <div class="cruce">
+        <div class="cruce-col cargado">
+          <div class="cruce-hd">Crédito + paquete FIRA · cargado</div>
+          <div class="cruce-row"><span>Monto del crédito</span><b>${credito?'MXN '+credito.toLocaleString('es-MX'):'—'}</b></div>
+          <div class="cruce-row"><span>Cultivo financiado</span><b>${cultFin}</b></div>
+          <div class="cruce-row"><span>Paquete FIRA</span><b>${pack?pack.nombre:'—'}</b></div>
+          <div class="cruce-row"><span>Costo de producción</span><b>${costoTot?fmt(costoTot):'—'}</b></div>
+          <div class="cruce-row"><span>Ingreso esperado</span><b>${ingEspTot?fmt(ingEspTot):'—'}</b></div>
+          <div class="cruce-row tot"><span>Utilidad esperada</span><b>${pack?fmt(utilEspTot):'—'}</b></div>
+        </div>
+        <div class="cruce-col sensado">
+          <div class="cruce-hd">Territorio · sensado por Bold</div>
+          <div class="cruce-row"><span>Cultivo en el campo</span><b style="color:${cultFinActivo?'var(--green)':'var(--red)'}">${sensado}</b></div>
+          <div class="cruce-row"><span>Superficie activa</span><b>${haSensada} ha · ${cobertura}%</b></div>
+          <div class="cruce-row"><span>Estado / vigor</span><b>${estadoCult} · ${vigor}</b></div>
+          <div class="cruce-row"><span>Rinde potencial</span><b>${rinde.toFixed(1)} t/ha</b></div>
+          <div class="cruce-row tot"><span>Valor de producción detectado</span><b>${fmt(valor)}</b></div>
+        </div>
+      </div>`:`<div class="lectura" style="margin:0 0 16px">No se cargó la información del crédito. Vuelve a <b>Ubicar predio</b> y completa el monto y el paquete FIRA para ver el cruce.</div>`}
+
+      ${pack?`
+      <div class="contraste-hd">Contraste supuesto FIRA ↔ territorio <span>${enLinea} en línea · ${desvios} con desvío</span></div>
+      <table class="tbl contraste-tbl">
+        <thead><tr><th>Variable</th><th>Supuesto del paquete FIRA</th><th>Detectado por Bold</th><th class="num">Estado</th></tr></thead>
+        <tbody>
+          ${contraste.map(c=>`<tr>
+            <td>${c.k}</td>
+            <td style="font-weight:400;color:var(--txt-2)">${c.esp}</td>
+            <td style="font-weight:600;color:var(--navy)">${c.det}</td>
+            <td class="num"><span class="estado ${c.ok?'ok':'off'}">${c.ok?'✓ en línea':'⚠ desvío'}</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div class="contraste-foot">Bold contrasta los supuestos del paquete FIRA con la evidencia del territorio. Costo de producción y precio de venta vienen del crédito o del mercado y no se sensan. El rinde detectado es potencial, no mide los insumos efectivamente aplicados.</div>
+      `:''}
+
+      ${pack&&credito?`
+      <div class="cappago">
+        <div class="cappago-l">Capacidad de pago esperada del paquete</div>
+        <div class="cappago-v" style="color:${capPago>=100?'var(--green)':(capPago>=60?'var(--amber)':'var(--red)')}">${capPago}%</div>
+        <div class="cappago-d">La utilidad esperada del paquete FIRA (${fmt(utilEspTot)}) cubre el <b>${capPago}%</b> del crédito otorgado (${fmt(credito)}). Información del crédito — no es sensado por Bold.</div>
+      </div>`:''}
+
+      <div class="senal" style="border-left-color:${senalColor}">
+        <div class="senal-hd" style="color:${senalColor}">● ${senal}</div>
+        <div class="senal-txt">${senalTxt}</div>
+      </div>
+
+      ${pack&&credito?`<div class="lectura" style="margin:16px 0 0">El paquete FIRA proyecta una utilidad de <b>${fmt(utilEspTot)}</b> sobre las ${haReal} ha <span style="color:var(--txt-3)">(cargado)</span>. En el campo, Bold detecta ${sensado} con un rinde potencial que valoriza la producción en <b>${fmt(valor)}</b> <span style="color:var(--txt-3)">(sensado)</span>. El cruce de ambas es la evidencia; Operaciones evalúa el repago con ella.</div>`:''}
+    </div>
+
+    <!-- VALORIZACIÓN -->
+    <div class="sec" id="sec-val">
+      <div class="sec-tit">💰 Valorización actual</div>
+      <div class="sec-sub">Valor bruto de la producción detectada en el predio al momento de la verificación. Superficie activa × rinde × precio. No descuenta costos.</div>
+      <div class="total-row"><span class="total-lbl">Valor de producción</span><span class="total-val">${fmt(valor)}</span></div>
+      <table class="tbl"><thead><tr><th>Cultivo</th><th class="num">Superficie activa</th><th class="num">Rinde</th><th class="num">Precio</th><th class="num">Valorización</th></tr></thead>
+      <tbody><tr><td><span class="crop-dot" style="background:${CROP_COLOR[sensado]||'var(--maiz)'}"></span>${sensado}</td><td class="num">${haSensada} ha</td><td class="num">${rinde.toFixed(1)} t/ha</td><td class="num">MXN ${precio}/t</td><td class="num"><b>${fmt(valor)}</b></td></tr></tbody></table>
+    </div>
+
+    <!-- HISTORIA -->
+    <div class="sec" id="sec-hist">
+      <div class="sec-tit">🌱 Historia productiva</div>
+      <div class="sec-sub">Qué se cultivó en el predio en los últimos ciclos, detectado por sensorización — sin declaración del productor.</div>
+      <div class="chips">
+        <div class="chip"><div class="chip-v">${haReal} ha</div><div class="chip-l">Superficie del predio</div></div>
+        <div class="chip"><div class="chip-v">${ciclos.length}</div><div class="chip-l">Ciclos analizados</div></div>
+        <div class="chip"><div class="chip-v">${rotac.filter((v,i,a)=>a.indexOf(v)===i).length}</div><div class="chip-l">Cultivos en rotación</div></div>
+      </div>
+      <div class="legend">${[...new Set(rotac)].map(c=>`<span><i style="background:${CROP_COLOR[c]||'var(--maiz)'}"></i>${c}</span>`).join('')}</div>
+      <div class="bars">${hist.map(h=>{const maxV=Math.max(...hist.map(x=>x.v));const ht=h.v/maxV*100;return `<div class="bar-col"><div class="bar-stack"><div class="bar-seg" style="height:${ht}%;background:${CROP_COLOR[h.cr]||'var(--maiz)'}"></div></div><div class="bar-lbl">${h.c.slice(2)}</div></div>`;}).join('')}</div>
+      <table class="tbl"><thead><tr><th>Ciclo</th><th>Cultivo</th><th class="num">Superficie</th><th class="num">Rinde</th><th class="num">Valor</th></tr></thead>
+      <tbody>${hist.map(h=>`<tr><td>${h.c}</td><td><span class="crop-dot" style="background:${CROP_COLOR[h.cr]||'var(--maiz)'}"></span>${h.cr}</td><td class="num">${h.ha} ha</td><td class="num">${h.r} t/ha</td><td class="num">${fmt(h.v)}</td></tr>`).join('')}</tbody></table>
+    </div>
+
+    <!-- CLIMA -->
+    <div class="sec" id="sec-clima">
+      <div class="sec-tit">🌦️ Clima · últimos 90 días</div>
+      <div class="sec-sub">Lluvia acumulada y temperatura media sobre el predio en el trimestre previo a la verificación.</div>
+      <div class="clima-grid">
+        <div class="metric"><div class="metric-v">${lluvia90} mm</div><div class="metric-l">Lluvia acumulada (90 d)</div></div>
+        <div class="metric"><div class="metric-v">${tempMedia} °C</div><div class="metric-l">Temperatura media</div></div>
+        <div class="metric"><div class="metric-v">90</div><div class="metric-l">Días con registro</div></div>
+      </div>
+      <div class="lectura" style="margin:0">La ventana climática del trimestre ${lluvia90>=100?'fue favorable para el desarrollo del cultivo':'estuvo por debajo del promedio de lluvia, condición a considerar para el rinde'}.</div>
+    </div>
+
+    <!-- HÍDRICO -->
+    <div class="sec" id="sec-hid">
+      <div class="sec-tit">💧 Riesgo hídrico</div>
+      <div class="sec-sub">Superficie del predio con agua en superficie, mes a mes. Indica riesgo de anegamiento para el tránsito y la implantación — no mide disponibilidad de agua para el cultivo.</div>
+      <div class="hid-cards">${hid.map(h=>`<div class="hid-card ${h.last?'last':''}"><div class="hid-mes">${h.m}</div><div class="hid-ha">${h.ha} ha</div><div class="hid-det">con agua en superficie${h.last?' · último mes':''}</div></div>`).join('')}</div>
+      <div class="lectura" style="margin:0">En ${hid[5].m}, ${hid[5].ha} ha con agua en superficie: el ${Math.round(hid[5].ha/haReal*100)}% del predio.</div>
+    </div>
+
+    <div class="rep-foot">AgroAdvisor muestra la realidad del campo sensada por Bold: qué cultivo hay, en qué estado, su historia, clima y riesgo hídrico. No emite un juicio sobre el cumplimiento del crédito — esa evaluación la realiza el área de Operaciones con esta evidencia. Verificación N° ${consulta} · valores simulados coherentes para la demo; en producción provienen de la sensorización multitemporal del territorio.</div>
+  `;
+}
+function registrarVisita(){
+  const V=window.__VISITA, msg=document.getElementById('vMsg');
+  const nom=document.getElementById('vNombre').value.trim(), mat=document.getElementById('vMat').value.trim(), fecha=document.getElementById('vFecha').value, dict=document.getElementById('vDict').value;
+  const res=V.items.map((it,i)=>({k:it.k,tipo:it.tipo,r:document.getElementById('vRes'+i).value,o:document.getElementById('vObs'+i).value.trim()}));
+  const falta=[];
+  if(!nom)falta.push('verificador');if(!mat)falta.push('matrícula FIRA');if(!fecha)falta.push('fecha');
+  if(res.some(r=>!r.r))falta.push('resultado de cada ítem');if(!dict)falta.push('dictamen');
+  if(falta.length){msg.innerHTML=`<div class="vmsg err">Falta completar: ${falta.join(', ')}.</div>`;return;}
+  const conf=res.filter(r=>r.r==='Confirmado').length, obs=res.filter(r=>r.r==='Con observación').length, nov=res.filter(r=>r.r==='No verificado').length;
+  const f=new Date(fecha+'T12:00').toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
+  msg.innerHTML=`<div class="vmsg ok"><b>Visita registrada.</b> ${V.credId} · ${f} · ${nom} (${mat})<br>
+    ${conf} confirmados, ${obs} con observación, ${nov} sin verificar. Dictamen: <b>${dict}</b>.<br>
+    <span style="color:var(--txt-3)">Queda en el historial del crédito y como soporte técnico del informe normativo, que emite el banco. En esta demo no se guarda.</span></div>`;
+}
+function showSec(k,el){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('sec-'+k).classList.add('active');
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>
